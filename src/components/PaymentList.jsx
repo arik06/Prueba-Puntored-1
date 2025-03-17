@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Container, Table, Badge, Button, Form, InputGroup, Card, Modal, Alert } from 'react-bootstrap';
-import { FaSearch, FaCopy, FaCheck, FaEye, FaArrowLeft, FaPlus, FaFilePdf, FaBan } from 'react-icons/fa';
+import { Container, Table, Badge, Button, Form, InputGroup, Card, Modal, Alert, Row, Col, Dropdown } from 'react-bootstrap';
+import { FaSearch, FaCopy, FaCheck, FaEye, FaArrowLeft, FaPlus, FaFilePdf, FaBan, FaFileExcel, FaFilter } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { PaymentContext } from '../context/PaymentContext';
 import { generatePaymentPDF } from '../utils/pdfGenerator';
+import * as XLSX from 'xlsx';
+import logo from '../assets/logo.png';
 
 const PaymentList = () => {
   const navigate = useNavigate();
@@ -14,7 +16,17 @@ const PaymentList = () => {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [cancelError, setCancelError] = useState(null);
-  const [cancelReason, setCancelReason] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    startDate: '',
+    endDate: '',
+    minAmount: '',
+    maxAmount: '',
+    status: ''
+  });
+  const [selectedPayments, setSelectedPayments] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     // Verificar si el usuario está autenticado
@@ -72,16 +84,15 @@ const PaymentList = () => {
   };
 
   const handleCancelPayment = async () => {
-    if (!selectedPayment || !cancelReason.trim()) return;
+    if (!selectedPayment) return;
 
     setIsProcessing(true);
     setCancelError(null);
 
     try {
-      await cancelPayment(selectedPayment.reference, cancelReason);
+      await cancelPayment(selectedPayment.reference);
       setShowCancelModal(false);
       setSelectedPayment(null);
-      setCancelReason('');
     } catch (error) {
       console.error('Error al cancelar el pago:', error);
       setCancelError(error.message);
@@ -90,10 +101,109 @@ const PaymentList = () => {
     }
   };
 
-  const filteredPayments = paymentsList.filter(payment => 
-    payment.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    payment.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleFilterChange = (field, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  const handleExportToExcel = () => {
+    const dataToExport = filteredPayments.map(payment => ({
+      Referencia: payment.reference,
+      Descripción: payment.description,
+      Monto: payment.amount,
+      Estado: getStatusText(payment.status),
+      'Fecha de Creación': formatDate(payment.creationDate),
+      'Fecha de Vencimiento': formatDate(payment.dueDate)
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Referencias");
+    XLSX.writeFile(wb, "referencias-de-pago.xlsx");
+  };
+
+  const getStatusText = (status) => {
+    const statusMap = {
+      '01': 'Pendiente',
+      '02': 'Pagado',
+      '03': 'Cancelado',
+      '04': 'Expirado'
+    };
+    return statusMap[status] || 'Desconocido';
+  };
+
+  const handleSelectPayment = (reference) => {
+    setSelectedPayments(prev => {
+      if (prev.includes(reference)) {
+        return prev.filter(ref => ref !== reference);
+      } else {
+        return [...prev, reference];
+      }
+    });
+  };
+
+  const handleSelectAllInPage = (event) => {
+    if (event.target.checked) {
+      const pagePayments = getCurrentPageItems().map(payment => payment.reference);
+      setSelectedPayments(prev => [...new Set([...prev, ...pagePayments])]);
+    } else {
+      const pagePayments = getCurrentPageItems().map(payment => payment.reference);
+      setSelectedPayments(prev => prev.filter(ref => !pagePayments.includes(ref)));
+    }
+  };
+
+  const handleCancelSelected = () => {
+    setSelectedPayment({ references: selectedPayments });
+    setShowCancelModal(true);
+  };
+
+  const handleBulkCancelPayment = async () => {
+    setIsProcessing(true);
+    setCancelError(null);
+
+    try {
+      for (const reference of selectedPayment.references) {
+        await cancelPayment(reference);
+      }
+      setShowCancelModal(false);
+      setSelectedPayment(null);
+      setSelectedPayments([]);
+    } catch (error) {
+      console.error('Error al cancelar pagos:', error);
+      setCancelError(error.message);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const filteredPayments = paymentsList.filter(payment => {
+    const matchesSearch = 
+      payment.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.description.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesDateRange = 
+      (!filters.startDate || new Date(payment.creationDate) >= new Date(filters.startDate)) &&
+      (!filters.endDate || new Date(payment.creationDate) <= new Date(filters.endDate));
+
+    const matchesAmountRange =
+      (!filters.minAmount || payment.amount >= parseFloat(filters.minAmount)) &&
+      (!filters.maxAmount || payment.amount <= parseFloat(filters.maxAmount));
+
+    const matchesStatus =
+      !filters.status || payment.status === filters.status;
+
+    return matchesSearch && matchesDateRange && matchesAmountRange && matchesStatus;
+  });
+
+  const getCurrentPageItems = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredPayments.slice(startIndex, startIndex + itemsPerPage);
+  };
+
+  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
 
   return (
     <Container fluid className="p-0">
@@ -108,9 +218,21 @@ const PaymentList = () => {
                 <FaArrowLeft className="me-2" />
                 Volver al Dashboard
               </Button>
+              <img 
+                src={logo}
+                alt="Logo" 
+                style={{ height: '40px', marginRight: '15px' }}
+              />
               <h2 className="mb-0">Referencias de Pago</h2>
             </div>
             <div className="d-flex gap-3">
+              <Button
+                variant="outline-primary"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <FaFilter className="me-2" />
+                Filtros
+              </Button>
               <InputGroup style={{ width: '300px' }}>
                 <InputGroup.Text>
                   <FaSearch />
@@ -121,6 +243,13 @@ const PaymentList = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </InputGroup>
+              <Button 
+                variant="success"
+                onClick={handleExportToExcel}
+              >
+                <FaFileExcel className="me-2" />
+                Exportar Excel
+              </Button>
               <Button 
                 variant="primary"
                 onClick={() => navigate('/create-payment')}
@@ -133,13 +262,102 @@ const PaymentList = () => {
         </Container>
       </div>
 
+      {showFilters && (
+        <Container fluid className="px-4 mb-4">
+          <Card className="shadow-sm">
+            <Card.Body>
+              <Row>
+                <Col md={3}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Fecha Inicial</Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={filters.startDate}
+                      onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={3}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Fecha Final</Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={filters.endDate}
+                      onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={2}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Monto Mínimo</Form.Label>
+                    <Form.Control
+                      type="number"
+                      value={filters.minAmount}
+                      onChange={(e) => handleFilterChange('minAmount', e.target.value)}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={2}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Monto Máximo</Form.Label>
+                    <Form.Control
+                      type="number"
+                      value={filters.maxAmount}
+                      onChange={(e) => handleFilterChange('maxAmount', e.target.value)}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={2}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Estado</Form.Label>
+                    <Form.Select
+                      value={filters.status}
+                      onChange={(e) => handleFilterChange('status', e.target.value)}
+                    >
+                      <option value="">Todos</option>
+                      <option value="01">Pendiente</option>
+                      <option value="02">Pagado</option>
+                      <option value="03">Cancelado</option>
+                      <option value="04">Expirado</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Card.Body>
+          </Card>
+        </Container>
+      )}
+
       <Container fluid className="px-4">
         <Card className="shadow-sm">
           <Card.Body>
+            {selectedPayments.length > 0 && (
+              <div className="mb-3">
+                <Button
+                  variant="warning"
+                  onClick={handleCancelSelected}
+                  disabled={!selectedPayments.some(ref => 
+                    paymentsList.find(p => p.reference === ref)?.status === '01'
+                  )}
+                >
+                  <FaBan className="me-2" />
+                  Cancelar Seleccionados ({selectedPayments.length})
+                </Button>
+              </div>
+            )}
             <div className="table-responsive">
               <Table hover className="align-middle">
                 <thead className="table-light">
                   <tr>
+                    <th>
+                      <Form.Check
+                        type="checkbox"
+                        onChange={handleSelectAllInPage}
+                        checked={getCurrentPageItems().every(payment => 
+                          selectedPayments.includes(payment.reference)
+                        )}
+                      />
+                    </th>
                     <th>Referencia</th>
                     <th>Descripción</th>
                     <th>Monto</th>
@@ -150,15 +368,22 @@ const PaymentList = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPayments.length === 0 ? (
+                  {getCurrentPageItems().length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="text-center py-4">
+                      <td colSpan="8" className="text-center py-4">
                         No se encontraron referencias de pago
                       </td>
                     </tr>
                   ) : (
-                    filteredPayments.map((payment) => (
+                    getCurrentPageItems().map((payment) => (
                       <tr key={payment.reference}>
+                        <td>
+                          <Form.Check
+                            type="checkbox"
+                            checked={selectedPayments.includes(payment.reference)}
+                            onChange={() => handleSelectPayment(payment.reference)}
+                          />
+                        </td>
                         <td style={{ maxWidth: '200px' }}>
                           <div className="d-flex align-items-center gap-2">
                             <span className="text-truncate">{payment.reference}</span>
@@ -216,6 +441,29 @@ const PaymentList = () => {
                 </tbody>
               </Table>
             </div>
+            {totalPages > 1 && (
+              <div className="d-flex justify-content-between align-items-center mt-3">
+                <div>
+                  Mostrando {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredPayments.length)} de {filteredPayments.length} referencias
+                </div>
+                <div className="d-flex gap-2">
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Siguiente
+                  </Button>
+                </div>
+              </div>
+            )}
           </Card.Body>
         </Card>
       </Container>
@@ -225,10 +473,11 @@ const PaymentList = () => {
         setShowCancelModal(false);
         setSelectedPayment(null);
         setCancelError(null);
-        setCancelReason('');
       }}>
         <Modal.Header closeButton>
-          <Modal.Title>Cancelar Referencia de Pago</Modal.Title>
+          <Modal.Title>
+            {selectedPayment?.references ? 'Cancelar Referencias Seleccionadas' : 'Cancelar Referencia de Pago'}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {cancelError && (
@@ -238,50 +487,40 @@ const PaymentList = () => {
           )}
           {selectedPayment && (
             <>
-              <p>¿Está seguro que desea cancelar la siguiente referencia de pago?</p>
-              <p><strong>Referencia:</strong> {selectedPayment.reference}</p>
-              <p><strong>Monto:</strong> {formatAmount(selectedPayment.amount)}</p>
-              <p><strong>Descripción:</strong> {selectedPayment.description}</p>
-              <Form.Group className="mt-3">
-                <Form.Label>Motivo de la cancelación</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={3}
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  placeholder="Ingrese el motivo de la cancelación"
-                  required
-                />
-              </Form.Group>
+              {selectedPayment.references ? (
+                <>
+                  <p>¿Está seguro que desea cancelar las siguientes referencias de pago?</p>
+                  <ul>
+                    {selectedPayment.references.map(ref => (
+                      <li key={ref}>{ref}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <>
+                  <p>¿Está seguro que desea cancelar la siguiente referencia de pago?</p>
+                  <p><strong>Referencia:</strong> {selectedPayment.reference}</p>
+                  <p><strong>Monto:</strong> {formatAmount(selectedPayment.amount)}</p>
+                  <p><strong>Descripción:</strong> {selectedPayment.description}</p>
+                </>
+              )}
             </>
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button 
-            variant="secondary" 
-            onClick={() => {
-              setShowCancelModal(false);
-              setSelectedPayment(null);
-              setCancelError(null);
-              setCancelReason('');
-            }}
-            disabled={isProcessing}
-          >
+          <Button variant="secondary" onClick={() => {
+            setShowCancelModal(false);
+            setSelectedPayment(null);
+            setCancelError(null);
+          }}>
             Cancelar
           </Button>
           <Button
             variant="danger"
-            onClick={handleCancelPayment}
-            disabled={isProcessing || !cancelReason.trim()}
+            onClick={selectedPayment?.references ? handleBulkCancelPayment : handleCancelPayment}
+            disabled={isProcessing}
           >
-            {isProcessing ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Procesando...
-              </>
-            ) : (
-              'Confirmar Cancelación'
-            )}
+            {isProcessing ? 'Procesando...' : 'Confirmar Cancelación'}
           </Button>
         </Modal.Footer>
       </Modal>

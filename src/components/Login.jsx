@@ -1,107 +1,113 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { Form, Button, Container, Card, InputGroup, Image } from 'react-bootstrap';
-import { FaUser, FaLock } from 'react-icons/fa';
-import { PaymentContext } from '../context/PaymentContext';
-import puntoredLogo from '../assets/logo.png';
+import authService from '../services/authService';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { loading, error, setLoading, setError, authenticate } = useContext(PaymentContext);
-  const [credentials, setCredentials] = useState({
-    username: '',
-    password: ''
-  });
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
+    // Verificar si ya hay una sesión activa
+    if (authService.isAuthenticated()) {
       navigate('/dashboard');
     }
   }, [navigate]);
 
-  const handleChange = (e) => {
-    setCredentials({
-      ...credentials,
-      [e.target.name]: e.target.value
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    setError('');
+    setIsLoading(true);
 
     try {
-      const result = await authenticate(credentials);
-      if (result?.data?.token) {
-        navigate('/dashboard');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/authenticate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ username, password }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+      console.log('Respuesta del servidor:', data);
+
+      if (!response.ok || data.responseCode === 401) {
+        throw new Error(data.responseMessage || 'Error al iniciar sesión');
       }
-    } catch (error) {
-      console.error('Error de autenticación:', error);
+
+      if (data.responseCode !== 200) {
+        throw new Error('Error en la autenticación');
+      }
+
+      // El token está dentro de data.data.token
+      const token = data.data?.token;
+      
+      if (!token) {
+        console.error('Estructura de la respuesta:', data);
+        throw new Error('No se recibió el token de acceso');
+      }
+
+      // Guardar el token
+      authService.setToken(token);
+
+      // Verificar que el token sea válido
+      if (!authService.isAuthenticated()) {
+        console.error('Token recibido:', token);
+        throw new Error('Token inválido');
+      }
+
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Error completo:', err);
+      setError(err.message || 'Error al iniciar sesión');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <Container className="d-flex justify-content-center align-items-center vh-100">
       <Card className="login-card">
-        <Card.Body className="text-center">
-          <h1 className="fw-bold mb-3">Bienvenidos</h1>
-          <h3 className="text-muted mb-4">A su gestión de pagos</h3>
-
-          <div className="text-center mb-5">
-            <Image src={puntoredLogo} alt="Puntored Logo" width={200} />
-          </div>
-
-          <h3 className="mb-4">Iniciar Sesión</h3>
+        <Card.Body>
+          <h3 className="text-center mb-4">Iniciar Sesión</h3>
+          {error && (
+            <Alert variant="danger" className="mb-4">
+              {error}
+            </Alert>
+          )}
           <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-4">
+            <Form.Group className="mb-3">
               <Form.Label>Usuario</Form.Label>
-              <InputGroup>
-                <InputGroup.Text>
-                  <FaUser />
-                </InputGroup.Text>
-                <Form.Control
-                  type="text"
-                  placeholder="Ingrese su usuario"
-                  value={credentials.username}
-                  onChange={handleChange}
-                  name="username"
-                  required
-                />
-              </InputGroup>
+              <Form.Control
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                disabled={isLoading}
+              />
             </Form.Group>
-
             <Form.Group className="mb-4">
               <Form.Label>Contraseña</Form.Label>
-              <InputGroup>
-                <InputGroup.Text>
-                  <FaLock />
-                </InputGroup.Text>
-                <Form.Control
-                  type="password"
-                  placeholder="Ingrese su contraseña"
-                  value={credentials.password}
-                  onChange={handleChange}
-                  name="password"
-                  required
-                />
-              </InputGroup>
+              <Form.Control
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={isLoading}
+              />
             </Form.Group>
-
-            {error && (
-              <div className="alert alert-danger mb-4" role="alert">
-                {error}
-              </div>
-            )}
-
-            <Button 
-              variant="primary" 
-              type="submit" 
+            <Button
+              variant="primary"
+              type="submit"
               className="w-100"
-              disabled={loading}
+              disabled={isLoading}
             >
-              {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+              {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
           </Form>
         </Card.Body>
