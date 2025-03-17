@@ -31,7 +31,6 @@ body, html {
   padding: 12px;
   color: rgb(255, 255, 255);
   background-color: rgb(0, 0, 0);
-  
 }
 
 /* Iconos dentro de los inputs */
@@ -39,6 +38,61 @@ body, html {
   background-color: #e0e0e0;
   border: none;
 }
+
 .btn-primary:hover {
   background-color: #a0118d; /* Un tono más oscuro */
+}
+
+/* Estilos para las tarjetas en general */
+.card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para los formularios */
+.form-control {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.form-control:focus {
+  border-color: #a0118d;
+  box-shadow: 0 0 0 0.2rem rgba(160, 17, 141, 0.25);
+}
+
+/* Estilos para los alerts */
+.alert {
+  border-radius: 8px;
+  padding: 15px;
+}
+
+/* Estilos para los botones secundarios */
+.btn-outline-secondary {
+  border-color: #6c757d;
+  color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* Estilos para el botón de cerrar sesión */
+.btn-outline-danger {
+  font-size: 16px;
+  padding: 8px 20px;
+}
+
+/* Ajustes para dispositivos móviles */
+@media (max-width: 768px) {
+  .login-card {
+    width: 90%;
+    padding: 30px;
+  }
+
+  .card {
+    margin: 10px;
+  }
 }
