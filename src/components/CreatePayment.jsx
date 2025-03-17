@@ -10,8 +10,9 @@ const CreatePayment = () => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [reference, setReference] = useState(null);
+  const [paymentInfo, setPaymentInfo] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
 
   // Validaciones
   const validateForm = () => {
@@ -45,7 +46,7 @@ const CreatePayment = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-    setReference(null);
+    setPaymentInfo(null);
 
     if (!validateForm()) {
       return;
@@ -60,8 +61,8 @@ const CreatePayment = () => {
         callbackURL: 'https://myurl/callback',
       });
 
-      if (result?.data?.reference) {
-        setReference(result.data.reference);
+      if (result?.data) {
+        setPaymentInfo(result.data);
         // Limpiar el formulario después de crear exitosamente
         setAmount('');
         setDescription('');
@@ -74,10 +75,24 @@ const CreatePayment = () => {
   };
 
   const handleCopyReference = () => {
-    if (reference) {
-      navigator.clipboard.writeText(reference);
+    if (paymentInfo?.reference) {
+      navigator.clipboard.writeText(paymentInfo.reference);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleCopyId = () => {
+    if (paymentInfo?.paymentId) {
+      navigator.clipboard.writeText(paymentInfo.paymentId);
+      setCopiedId(true);
+      setTimeout(() => setCopiedId(false), 2000);
+    }
+  };
+
+  const handleViewDetails = () => {
+    if (paymentInfo?.reference && paymentInfo?.paymentId) {
+      navigate(`/view-payment/${paymentInfo.reference}/${paymentInfo.paymentId}`);
     }
   };
 
@@ -103,23 +118,55 @@ const CreatePayment = () => {
             </Alert>
           )}
 
-          {reference && (
+          {paymentInfo && (
             <Alert variant="success" className="mb-4">
               <p className="mb-2">¡Referencia creada exitosamente!</p>
-              <InputGroup>
-                <Form.Control
-                  type="text"
-                  value={reference}
-                  readOnly
-                  className="bg-white"
-                />
+              <div className="mb-3">
+                <label className="d-block mb-2">Número de Referencia:</label>
+                <InputGroup className="mb-2">
+                  <Form.Control
+                    type="text"
+                    value={paymentInfo.reference}
+                    readOnly
+                    className="bg-white"
+                  />
+                  <Button 
+                    variant={copied ? "success" : "outline-secondary"}
+                    onClick={handleCopyReference}
+                  >
+                    {copied ? <FaCheck /> : <FaCopy />}
+                  </Button>
+                </InputGroup>
+              </div>
+              <div className="mb-3">
+                <label className="d-block mb-2">ID de Pago:</label>
+                <InputGroup className="mb-2">
+                  <Form.Control
+                    type="text"
+                    value={paymentInfo.paymentId}
+                    readOnly
+                    className="bg-white"
+                  />
+                  <Button 
+                    variant={copiedId ? "success" : "outline-secondary"}
+                    onClick={handleCopyId}
+                  >
+                    {copiedId ? <FaCheck /> : <FaCopy />}
+                  </Button>
+                </InputGroup>
+                <small className="text-muted">
+                  Guarda estos datos para consultar el estado del pago posteriormente
+                </small>
+              </div>
+              <div className="text-center">
                 <Button 
-                  variant={copied ? "success" : "outline-secondary"}
-                  onClick={handleCopyReference}
+                  variant="primary"
+                  onClick={handleViewDetails}
+                  className="mt-2"
                 >
-                  {copied ? <FaCheck /> : <FaCopy />}
+                  Ver Detalles del Pago
                 </Button>
-              </InputGroup>
+              </div>
             </Alert>
           )}
 
