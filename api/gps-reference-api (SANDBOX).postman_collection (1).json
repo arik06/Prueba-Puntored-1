@@ -1,0 +1,1589 @@
+{
+	"info": {
+		"_postman_id": "51ffc512-923b-4c26-a4b6-86a9bce5c757",
+		"name": "gps-reference-api (SANDBOX)",
+		"description": "The following is the standard API for creating references for referenced payments.\n\n#### JWT\n\nThe calls to this API use a JWT that must be used in the Authorization header. To obtain it, it is necessary to use the credentials previously shared by the Gestopago team.\n\nThe JWT obtained has a lifetime of 24 hrs. Any call with an expired JWT will cause error.\n\n#### Key Points\n\nThis token must be used to authenticate all subsequent calls to the API, where it must be added in the Authorization header in the form of a Bearer token.\n\n`Authorization: Bearer`\n\n#### Structure of responses\n\nAll API responses follow a uniform structure to facilitate the interpretation of results, both in cases of success and error. The general structure consists of three key elements:\n\n``` json\n{\n     \"response_code\": \"code\",\n     \"response_message\": \"message\",\n     \"data\": {\n          // Specific data of the response according to the endpoint.\n     }\n}\n\n ```",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "37560226",
+		"_collection_link": "https://restless-astronaut-299232.postman.co/workspace/New-Team-Workspace~5472bc21-8b0e-48fc-b34b-e75f5ae2d33f/collection/37560226-51ffc512-923b-4c26-a4b6-86a9bce5c757?action=share&source=collection_link&creator=37560226"
+	},
+	"item": [
+		{
+			"name": "Authenticate",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let response = pm.response.json();\r",
+							"\r",
+							"\r",
+							"pm.collectionVariables.set(\"token\", response.data.token);\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\": \"test\",\r\n    \"password\": \"/1,52HW+s.jg\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{SandboxUrl}}/authenticate",
+					"host": [
+						"{{SandboxUrl}}"
+					],
+					"path": [
+						"authenticate"
+					]
+				},
+				"description": "### POST v1/authenticate\n\nThis endpoint allows authentication by obtaining a JWT. This endpoint requires the username and password previously shared with the implementer.\n\n#### Request Body\n\n- `username` (string) - Previous shared username\n    \n- `password` (string) - Previous shared password.\n    \n\n#### Response\n\nThe response will be in JSON format and will have the following schema:\n\n- `data` (object) - The data object containing the user's authentication token and the timestamp of token creation.\n    \n    - `token` (string) - The authentication token generated for the user.\n        \n    - `createdAt` (string) - The timestamp indicating when the token was created.\n        \n\n#### Example Response\n\n``` json\n{\n    \"responseCode\": 200,\n    \"responseMessage\": \"Authentication successful\",\n    \"data\": {\n        \"token\": \"token\",\n        \"createdAt\": \"timestamp\"\n    }\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Generate Reference",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"externalId\": \"123\",\r\n    \"amount\": 100.00,\r\n    \"description\":\"Some description\",\r\n    \"dueDate\": \"2025-01-30 23:59:00\",\r\n    \"callbackURL\":\"https://localhost:8080/callback\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{SandboxUrl}}/payment",
+					"host": [
+						"{{SandboxUrl}}"
+					],
+					"path": [
+						"payment"
+					]
+				},
+				"description": "### POST v1/payment\n\nThis API endpoint allows you to make a payment.\n\n#### Request Body\n\n- `externalId` (string, max 255): Unique identifier of this payment by the implementer.\n    \n- `amount` (double): Payment amount.\n    \n- `description` (string, max 255): Payment description.\n    \n- `dueDate` (string): Payment due date in format \"yyyy-MM-dd HH:mm:ss\"\n    \n- `callbackURL` (string, max 255): URL to which you should report when this payment has been registered in any of the Puntored points.\n    \n\n#### Response\n\nThe response will be in JSON format and will have the following schema:\n\n- `data` (object) - The data object containing .\n    \n    - `paymentId` (string) - Unique identifier of the payment by puntored.\n        \n    - `reference` (string) - Unique reference that must be given to the client to make the payment in any of the physical points of the Puntored network.\n        \n    - `amount` (double) - Payment amount.\n        \n    - `description` (string) - Payment description.\n        \n    - `creationDate` (string) - The timestamp indicating when the reference was created.\n        \n    - `status` (string) - \"01\" created or \"-1\" not created\n        \n    - `message` (string) - Message detailing the possible cause of error if any.\n        \n\n``` json\n{\n    \"responseCode\": 201,\n    \"responseMessage\": \"Payment created successfully\",\n    \"data\": {\n        \"paymentId\": 1,\n        \"reference\": \"PRV124101801F3CD80866AF94D9946\",\n        \"amount\": 100.1,\n        \"description\": \"Payment description\",\n        \"creationDate\": \"2024-10-18 18:17:21\",\n        \"status\": \"01\",\n        \"message\": \"Payment created successfully\"\n    }\n}\n\n ```"
+			},
+			"response": [
+				{
+					"name": "Generate Reference Success",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"externalId\": \"123\",\r\n    \"amount\": 100.00,\r\n    \"description\":\"Payment description\",\r\n    \"dueDate\": \"2024-10-30 11:59:00\",\r\n    \"callbackURL\":\"https://localhost:8080/callback\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{SandboxUrl}}/payment",
+							"host": [
+								"{{SandboxUrl}}"
+							],
+							"path": [
+								"payment"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Server",
+							"value": "nginx"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 22 Oct 2024 20:05:29 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, max-age=0, must-revalidate"
+						},
+						{
+							"key": "Pragma",
+							"value": "no-cache"
+						},
+						{
+							"key": "Expires",
+							"value": "0"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "SAMEORIGIN"
+						},
+						{
+							"key": "Strict-Transport-Security",
+							"value": "max-age=31536000; includeSubDomains"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"responseCode\": 201,\n    \"responseMessage\": \"Payment created successfully\",\n    \"data\": {\n        \"paymentId\": 2,\n        \"reference\": \"5125241022DAE2EFABBFFE22A3CB67\",\n        \"amount\": 100,\n        \"description\": \"Payment description\",\n        \"creationDate\": \"2024-10-22 14:05:29\",\n        \"status\": \"01\",\n        \"message\": \"Payment created successfully\"\n    }\n}"
+				},
+				{
+					"name": "Validation Errors",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"externalId\": \"\",\r\n    \"amount\":\"someInvalidAmount\",\r\n    \"description\":\"\",\r\n    \"dueDate\": \"2024-10-10\",\r\n    \"callbackURL\":\"://localhost:8080/callback\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{SandboxUrl}}/payment",
+							"host": [
+								"{{SandboxUrl}}"
+							],
+							"path": [
+								"payment"
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, max-age=0, must-revalidate"
+						},
+						{
+							"key": "Pragma",
+							"value": "no-cache"
+						},
+						{
+							"key": "Expires",
+							"value": "0"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Date",
+							"value": "Wed, 09 Oct 2024 19:03:10 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "close"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"responseCode\": 400,\n    \"responseMessage\": \"\",\n    \"data\": {\n        \"errors\": {\n            \"amount\": \"El monto debe ser un número con al menos dos dígitos.\",\n            \"dueDate\": \"El formato de dueDate debe ser yyyy-MM-dd HH:mm:ss\",\n            \"externalId\": \"no debe estar vacío\",\n            \"description\": \"no debe estar vacío\",\n            \"callbackURL\": \"El callbackURL debe ser una URL válida.\"\n        }\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Get Reference",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{SandboxUrl}}/payment/PRV12501031DAD5F29F9F247A86491/153",
+					"host": [
+						"{{SandboxUrl}}"
+					],
+					"path": [
+						"payment",
+						"PRV12501031DAD5F29F9F247A86491",
+						"153"
+					]
+				},
+				"description": "### GET v1/payment/{reference}/{paymentId}\n\nThis endpoint allows you to check the status of a payment. The possible statuses of a payment are as follows.\n\n- \"01\" Created\n    \n- \"02\" Paid\n    \n- \"03\" Canceled\n    \n- \"04\" Expired\n    \n\n#### URL Params\n\n- `reference` : Unique identifier of this payment by the implementer.\n    \n- `paymentId` : Payment amount.\n    \n\n#### Response\n\nThe response will be in JSON format and will have the following schema:\n\n- `data` (object) - The data object containing.\n    \n    - `paymentId` (string) - Unique identifier of the payment by puntored.\n        \n    - `reference` (string) - Unique reference that must be given to the client to make the payment in any of the physical points of the Puntored network.\n        \n    - `amount` (double) - Payment amount.\n        \n    - `description` (string) - Payment description.\n        \n    - `dueDate` (string): Payment due date in format \"yyyy-MM-dd HH:mm:ss\"\n        \n    - `status` (string) - \"01\", \"02\", \"03\", \"04\"\n        \n    - `callBackURL` (string) - URL to which you should report when this payment has been registered in any of the puntored points.\n        \n    - `callBackACKID` (string) - Value of the Acknowledge id delivered by the implementer.\n        \n    - `cancelDescription` (string) - Reason for cancellation if any.\n        \n    - `authorizationNumber` (string) - Authorization number, only if the state is paid\n        \n    - `paymentDate` (string) - Date of payment in format \"yyyy-MM-dd HH:mm:ss\", only if the state is paid\n        \n\n``` json\n{\n    \"responseCode\": 200,\n    \"responseMessage\": \"Payment verified successfully\",\n    \"data\": {\n        \"paymentId\": 1,\n        \"amount\": 100.0,\n        \"reference\": \"PRV124102161484253FC12DDEB8512\",\n        \"description\": \"Payment description\",\n        \"dueDate\": \"2024-10-30 11:59:00\",\n        \"status\": \"02\",\n        \"callBackURL\": \"https://localhost:8080/callback\",\n        \"callbackACKID\": \"\",\n        \"cancelDescription\": \"\",\n        \"authorizationNumber\": \"477846\",\n        \"paymentDate\": \"2024-10-21 21:23:55\"\n    }\n}\n\n ```"
+			},
+			"response": [
+				{
+					"name": "Get Reference Success",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SandboxUrl}}/payment/71e82410224022F8E7495215B83DFD/3",
+							"host": [
+								"{{SandboxUrl}}"
+							],
+							"path": [
+								"payment",
+								"71e82410224022F8E7495215B83DFD",
+								"3"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Server",
+							"value": "nginx"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 22 Oct 2024 20:30:39 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, max-age=0, must-revalidate"
+						},
+						{
+							"key": "Pragma",
+							"value": "no-cache"
+						},
+						{
+							"key": "Expires",
+							"value": "0"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "SAMEORIGIN"
+						},
+						{
+							"key": "Strict-Transport-Security",
+							"value": "max-age=31536000; includeSubDomains"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"responseCode\": 200,\n    \"responseMessage\": \"Payment verified successfully\",\n    \"data\": {\n        \"paymentId\": 3,\n        \"amount\": 100,\n        \"reference\": \"71e82410224022F8E7495215B83DFD\",\n        \"description\": \"Payment description\",\n        \"dueDate\": \"2024-10-30 11:59:00\",\n        \"status\": \"01\",\n        \"callBackURL\": \"https://localhost:8080/callback\",\n        \"callbackACKID\": \"\",\n        \"cancelDescription\": \"\"\n    }\n}"
+				},
+				{
+					"name": "Not Found",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SandboxUrl}}/payment/091758311fd26bd81aec9f6fd8e833/1",
+							"host": [
+								"{{SandboxUrl}}"
+							],
+							"path": [
+								"payment",
+								"091758311fd26bd81aec9f6fd8e833",
+								"1"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, max-age=0, must-revalidate"
+						},
+						{
+							"key": "Pragma",
+							"value": "no-cache"
+						},
+						{
+							"key": "Expires",
+							"value": "0"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Date",
+							"value": "Fri, 04 Oct 2024 02:58:46 GMT"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=60"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"responseCode\": 404,\n    \"responseMessage\": \"Error getting payment reference\",\n    \"data\": {\n        \"status\": 404,\n        \"message\": \"Payment with reference = 091758311fd26bd81aec9f6fd8e833 and paymentId = 1 not found\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Search references",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{SandboxUrl}}/payment/search?startCreationDate=2025-01-01 00:00:00&endCreationDate=2025-01-30 23:59:59&status=02",
+					"host": [
+						"{{SandboxUrl}}"
+					],
+					"path": [
+						"payment",
+						"search"
+					],
+					"query": [
+						{
+							"key": "startCreationDate",
+							"value": "2025-01-01 00:00:00"
+						},
+						{
+							"key": "endCreationDate",
+							"value": "2025-01-30 23:59:59"
+						},
+						{
+							"key": "startPaymentDate",
+							"value": "2024-10-09 00:00:00",
+							"disabled": true
+						},
+						{
+							"key": "endPaymentDate",
+							"value": "2024-10-30 23:59:59",
+							"disabled": true
+						},
+						{
+							"key": "status",
+							"value": "02"
+						},
+						{
+							"key": "paginate",
+							"value": "50",
+							"disabled": true
+						},
+						{
+							"key": "page",
+							"value": "0",
+							"disabled": true
+						}
+					]
+				},
+				"description": "### GET v1/payment/search?\n\nThe objective of this endpoint is to obtain the list of payments created in a period of time. This method can filter by the following parameters of creation date, payment date and status.\n\n#### Request Parameters\n\n- `startCreationDate` (string) - The start date for payment creation.\n    \n- `endCreationDate` (string) - The end date for payment creation.\n    \n- `startPaymentDate` (string) - The start date for payment.\n    \n- `endPaymentDate` (string) - The end date for payment.\n    \n- `status` (string) - The status of the payment.\n    \n\n#### Response\n\nThe response will be a JSON object with the following schema:\n\n- `data` (object) - The data object containing.\n    \n    - `content` Object list.\n        \n        - `paymentId` (string) - Unique identifier of the payment by puntored.\n            \n        - `reference` (string) - Unique reference that must be given to the client to make the payment in any of the physical points of the Puntored network.\n            \n        - `amount` (double) - Payment amount.\n            \n        - `description` (string) - Payment description.\n            \n        - `dueDate` (string): Payment due date in format \"yyyy-MM-dd HH:mm:ss\"\n            \n        - `status` (string) - \"01\", \"02\", \"03\"\n            \n        - `callBackURL` (string) - URL to which you should report when this payment has been registered in any of the puntored points.\n            \n        - `callBackACKID` (string) - Value of the Acknowledge id delivered by the implementer.\n            \n        - `cancelDescription` (string) - Reason for cancellation if any.\n            \n        - `authorizationNumber` (string) - Authorization number, only if the state is paid\n            \n        - `paymentDate` (string) - Date of payment in format \"yyyy-MM-dd HH:mm:ss\", only if the state is paid\n            \n\n``` json\n{\n    \"responseCode\": 200,\n    \"responseMessage\": \"Payments retrieved successfully\",\n    \"data\": {\n        \"content\": [\n            {\n                \"paymentId\": 1,\n                \"amount\": 100.0,\n                \"reference\": \"PRV124102161484253FC12DDEB8512\",\n                \"description\": \"Payment description\",\n                \"dueDate\": \"2024-10-30 11:59:00\",\n                \"status\": \"02\",\n                \"callBackURL\": \"https://localhost:8080/callback\",\n                \"callbackACKID\": \"\",\n                \"cancelDescription\": \"\",\n                \"authorizationNumber\": \"477846\",\n                \"paymentDate\": \"2024-10-21 21:23:55\"\n            }\n        ],\n        \"pageable\": {\n            \"pageNumber\": 0,\n            \"pageSize\": 10,\n            \"sort\": {\n                \"empty\": true,\n                \"unsorted\": true,\n                \"sorted\": false\n            },\n            \"offset\": 0,\n            \"unpaged\": false,\n            \"paged\": true\n        },\n        \"last\": true,\n        \"totalElements\": 1,\n        \"totalPages\": 1,\n        \"size\": 10,\n        \"number\": 0,\n        \"sort\": {\n            \"empty\": true,\n            \"unsorted\": true,\n            \"sorted\": false\n        },\n        \"first\": true,\n        \"numberOfElements\": 1,\n        \"empty\": false\n    }\n}\n\n ```"
+			},
+			"response": [
+				{
+					"name": "CreationDate validation",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SandboxUrl}}/payment/search?startCreationDate=2024-10-04 12:59:56&status=02",
+							"host": [
+								"{{SandboxUrl}}"
+							],
+							"path": [
+								"payment",
+								"search"
+							],
+							"query": [
+								{
+									"key": "startCreationDate",
+									"value": "2024-10-04 12:59:56"
+								},
+								{
+									"key": "endCreationDate",
+									"value": "2024-10-04 23:59:59",
+									"disabled": true
+								},
+								{
+									"key": "startPaymentDate",
+									"value": "2024-10-04 00:00:00",
+									"disabled": true
+								},
+								{
+									"key": "endPaymentDate",
+									"value": "2024-10-04 23:59:59",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "02"
+								}
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, max-age=0, must-revalidate"
+						},
+						{
+							"key": "Pragma",
+							"value": "no-cache"
+						},
+						{
+							"key": "Expires",
+							"value": "0"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 07 Oct 2024 19:45:10 GMT"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=60"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"responseCode\": 404,\n    \"responseMessage\": \"Error getting payments references\",\n    \"data\": {\n        \"status\": 404,\n        \"message\": \"endCreationDate is required when startCreationDate is provided\"\n    }\n}"
+				},
+				{
+					"name": "Validation Dates",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SandboxUrl}}/payment/search?status=02",
+							"host": [
+								"{{SandboxUrl}}"
+							],
+							"path": [
+								"payment",
+								"search"
+							],
+							"query": [
+								{
+									"key": "startCreationDate",
+									"value": "2024-10-04 12:59:56",
+									"disabled": true
+								},
+								{
+									"key": "endCreationDate",
+									"value": "2024-10-04 23:59:59",
+									"disabled": true
+								},
+								{
+									"key": "startPaymentDate",
+									"value": "2024-10-07 00:00:00",
+									"disabled": true
+								},
+								{
+									"key": "endPaymentDate",
+									"value": "2024-10-07 23:59:59",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "02"
+								}
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, max-age=0, must-revalidate"
+						},
+						{
+							"key": "Pragma",
+							"value": "no-cache"
+						},
+						{
+							"key": "Expires",
+							"value": "0"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 07 Oct 2024 22:06:21 GMT"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=60"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"responseCode\": 404,\n    \"responseMessage\": \"Error getting payments references\",\n    \"data\": {\n        \"status\": 404,\n        \"message\": \"At least one date range is required\"\n    }\n}"
+				},
+				{
+					"name": "Success Search 4 dates",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SandboxUrl}}/payment/search?startCreationDate=2024-10-07 00:00:00&endCreationDate=2024-10-07 23:59:59&startPaymentDate=2024-10-07 00:00:00&endPaymentDate=2024-10-07 23:59:59&status=02",
+							"host": [
+								"{{SandboxUrl}}"
+							],
+							"path": [
+								"payment",
+								"search"
+							],
+							"query": [
+								{
+									"key": "startCreationDate",
+									"value": "2024-10-07 00:00:00"
+								},
+								{
+									"key": "endCreationDate",
+									"value": "2024-10-07 23:59:59"
+								},
+								{
+									"key": "startPaymentDate",
+									"value": "2024-10-07 00:00:00"
+								},
+								{
+									"key": "endPaymentDate",
+									"value": "2024-10-07 23:59:59"
+								},
+								{
+									"key": "status",
+									"value": "02"
+								},
+								{
+									"key": "page",
+									"value": "0",
+									"disabled": true
+								},
+								{
+									"key": "paginate",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, max-age=0, must-revalidate"
+						},
+						{
+							"key": "Pragma",
+							"value": "no-cache"
+						},
+						{
+							"key": "Expires",
+							"value": "0"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 07 Oct 2024 22:26:15 GMT"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=60"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"responseCode\": 200,\n    \"responseMessage\": \"Search\",\n    \"data\": {\n        \"content\": [\n            {\n                \"paymentId\": 9,\n                \"amount\": 100,\n                \"reference\": \"eb1e5ca1f0210c9393c599af08e62d\",\n                \"description\": \"some description\",\n                \"dueDate\": \"2024-10-10 06:00:00\",\n                \"status\": \"02\",\n                \"callBackURL\": \"http://localhost:8080/callback\",\n                \"callbackACKID\": null,\n                \"paymentDate\": \"2024-10-07 22:25:15\"\n            }\n        ],\n        \"pageable\": {\n            \"pageNumber\": 0,\n            \"pageSize\": 10,\n            \"sort\": {\n                \"empty\": true,\n                \"sorted\": false,\n                \"unsorted\": true\n            },\n            \"offset\": 0,\n            \"paged\": true,\n            \"unpaged\": false\n        },\n        \"last\": true,\n        \"totalElements\": 1,\n        \"totalPages\": 1,\n        \"size\": 10,\n        \"number\": 0,\n        \"sort\": {\n            \"empty\": true,\n            \"sorted\": false,\n            \"unsorted\": true\n        },\n        \"first\": true,\n        \"numberOfElements\": 1,\n        \"empty\": false\n    }\n}"
+				},
+				{
+					"name": "1 Date missing",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SandboxUrl}}/payment/search?startCreationDate=2024-10-07 00:00:00&startPaymentDate=2024-10-07 00:00:00&endPaymentDate=2024-10-07 23:59:59&status=02",
+							"host": [
+								"{{SandboxUrl}}"
+							],
+							"path": [
+								"payment",
+								"search"
+							],
+							"query": [
+								{
+									"key": "startCreationDate",
+									"value": "2024-10-07 00:00:00"
+								},
+								{
+									"key": "endCreationDate",
+									"value": "2024-10-07 23:59:59",
+									"disabled": true
+								},
+								{
+									"key": "startPaymentDate",
+									"value": "2024-10-07 00:00:00"
+								},
+								{
+									"key": "endPaymentDate",
+									"value": "2024-10-07 23:59:59"
+								},
+								{
+									"key": "status",
+									"value": "02"
+								},
+								{
+									"key": "page",
+									"value": "0",
+									"disabled": true
+								},
+								{
+									"key": "paginate",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, max-age=0, must-revalidate"
+						},
+						{
+							"key": "Pragma",
+							"value": "no-cache"
+						},
+						{
+							"key": "Expires",
+							"value": "0"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 07 Oct 2024 22:26:50 GMT"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=60"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"responseCode\": 404,\n    \"responseMessage\": \"Error getting payments references\",\n    \"data\": {\n        \"status\": 404,\n        \"message\": \"endCreationDate is required when startCreationDate is provided\"\n    }\n}"
+				},
+				{
+					"name": "Validation Error end less than start",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SandboxUrl}}/payment/search?startCreationDate=2024-10-07 00:00:00&endCreationDate=2024-10-01 23:59:59&status=02",
+							"host": [
+								"{{SandboxUrl}}"
+							],
+							"path": [
+								"payment",
+								"search"
+							],
+							"query": [
+								{
+									"key": "startCreationDate",
+									"value": "2024-10-07 00:00:00"
+								},
+								{
+									"key": "endCreationDate",
+									"value": "2024-10-01 23:59:59"
+								},
+								{
+									"key": "startPaymentDate",
+									"value": "2024-10-07 00:00:00",
+									"disabled": true
+								},
+								{
+									"key": "endPaymentDate",
+									"value": "2024-10-07 23:59:59",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "02"
+								},
+								{
+									"key": "page",
+									"value": "0",
+									"disabled": true
+								},
+								{
+									"key": "paginate",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, max-age=0, must-revalidate"
+						},
+						{
+							"key": "Pragma",
+							"value": "no-cache"
+						},
+						{
+							"key": "Expires",
+							"value": "0"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 07 Oct 2024 22:27:22 GMT"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=60"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"responseCode\": 404,\n    \"responseMessage\": \"Error getting payments references\",\n    \"data\": {\n        \"status\": 404,\n        \"message\": \"startCreationDate must be less than endCreationDate\"\n    }\n}"
+				},
+				{
+					"name": "Success All Parameters",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{SandboxUrl}}/payment/search?startCreationDate=2024-10-11 00:00:00&endCreationDate=2024-10-16 23:59:59&startPaymentDate=2024-10-09 00:00:00&endPaymentDate=2024-10-16 23:59:59&status=02&page=0&paginate=10",
+							"host": [
+								"{{SandboxUrl}}"
+							],
+							"path": [
+								"payment",
+								"search"
+							],
+							"query": [
+								{
+									"key": "startCreationDate",
+									"value": "2024-10-11 00:00:00"
+								},
+								{
+									"key": "endCreationDate",
+									"value": "2024-10-16 23:59:59"
+								},
+								{
+									"key": "startPaymentDate",
+									"value": "2024-10-09 00:00:00"
+								},
+								{
+									"key": "endPaymentDate",
+									"value": "2024-10-16 23:59:59"
+								},
+								{
+									"key": "status",
+									"value": "02"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "paginate",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, max-age=0, must-revalidate"
+						},
+						{
+							"key": "Pragma",
+							"value": "no-cache"
+						},
+						{
+							"key": "Expires",
+							"value": "0"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Date",
+							"value": "Wed, 16 Oct 2024 20:40:42 GMT"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=60"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"responseCode\": 200,\n    \"responseMessage\": \"Search\",\n    \"data\": {\n        \"content\": [\n            {\n                \"paymentId\": 4,\n                \"amount\": 100,\n                \"reference\": \"PRV124101611375E06C5AEF10AE246\",\n                \"description\": \"abcd\",\n                \"dueDate\": \"2024-10-20 11:59:00\",\n                \"status\": \"02\",\n                \"callBackURL\": \"https://localhost:8080/callback\",\n                \"callbackACKID\": \"\",\n                \"cancelDescription\": \"\",\n                \"paymentDate\": \"2024-10-16 14:40:18\"\n            }\n        ],\n        \"pageable\": {\n            \"pageNumber\": 0,\n            \"pageSize\": 10,\n            \"sort\": {\n                \"empty\": true,\n                \"unsorted\": true,\n                \"sorted\": false\n            },\n            \"offset\": 0,\n            \"unpaged\": false,\n            \"paged\": true\n        },\n        \"last\": true,\n        \"totalElements\": 1,\n        \"totalPages\": 1,\n        \"first\": true,\n        \"size\": 10,\n        \"number\": 0,\n        \"sort\": {\n            \"empty\": true,\n            \"unsorted\": true,\n            \"sorted\": false\n        },\n        \"numberOfElements\": 1,\n        \"empty\": false\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Cancel reference",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"reference\": \"PRV12412313B7C06F76A6917DEACDB\",\r\n    \"status\": \"03\",\r\n    \"updateDescription\": \"Cancel description\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{SandboxUrl}}/payment/cancel",
+					"host": [
+						"{{SandboxUrl}}"
+					],
+					"path": [
+						"payment",
+						"cancel"
+					]
+				},
+				"description": "### PUT v1/payment/cancel\n\nThe purpose of this endpoint is to cancel a payment as long as the reference does not have the status = paid which means that it has not been paid.\n\n#### Request Body\n\n- `reference` (string): The reference of the payment to be cancelled.\n    \n- `status` (string): “03” Canceled\n    \n- `updateDescription` (string): A message describing the reason for the cancellation.\n    \n\n#### Response\n\nThe response will be in JSON format and will have the following schema:\n\n- `data` (object) - The data object containing .\n    \n    - `paymentId` (string) - Unique identifier of the payment by puntored.\n        \n    - `creationDate` (string) - The timestamp indicating when the reference was created.\n        \n    - `status` (string) - \"03\" cancelled\n        \n    - `reference` (string) - Unique reference that must be given to the client to make the payment in any of the physical points of the Puntored network.\n        \n    - `cancelDescription` (string) - Reason for cancellation if any.\n        \n    - `message` (string) - Message detailing the possible cause of error if any.\n        \n    - `updatedAt` (string) - Date of payment cancellation in format “yyyy-MM-dd HH:mm:ss”.\n        \n\n##### Example Response Body\n\n``` json\n{\n    \"responseCode\": 202,\n    \"responseMessage\": \"Payment canceled successfully\",\n    \"data\": {\n        \"paymentId\": 2,\n        \"creationDate\": \"2024-10-21 21:56:56\",\n        \"reference\": \"PRV124102152F2C61796B5D5F5E0BE\",\n        \"status\": \"03\",\n        \"message\": \"Payment canceled successfully\",\n        \"cancelDescription\": \"Mensaje de cancelacion\",\n        \"updatedAt\": \"2024-10-21 21:57:23\"\n    }\n}\n\n ```"
+			},
+			"response": [
+				{
+					"name": "Cancel Success",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"reference\": \"71e82410224022F8E7495215B83DFD\",\r\n    \"status\": \"03\",\r\n    \"updateDescription\": \"Mensaje de cancelacion\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{SandboxUrl}}/payment/cancel",
+							"host": [
+								"{{SandboxUrl}}"
+							],
+							"path": [
+								"payment",
+								"cancel"
+							]
+						}
+					},
+					"status": "Accepted",
+					"code": 202,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Server",
+							"value": "nginx"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 22 Oct 2024 20:38:55 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, max-age=0, must-revalidate"
+						},
+						{
+							"key": "Pragma",
+							"value": "no-cache"
+						},
+						{
+							"key": "Expires",
+							"value": "0"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "SAMEORIGIN"
+						},
+						{
+							"key": "Strict-Transport-Security",
+							"value": "max-age=31536000; includeSubDomains"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"responseCode\": 202,\n    \"responseMessage\": \"Payment canceled successfully\",\n    \"data\": {\n        \"paymentId\": 3,\n        \"creationDate\": \"2024-10-22 14:30:18\",\n        \"reference\": \"71e82410224022F8E7495215B83DFD\",\n        \"status\": \"03\",\n        \"message\": \"Payment canceled successfully\",\n        \"cancelDescription\": \"Mensaje de cancelacion\",\n        \"updatedAt\": \"2024-10-22 14:38:55\"\n    }\n}"
+				},
+				{
+					"name": "Cancel validation",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"reference\": \"SomeInvalidReference\",\r\n    \"status\": \"03\",\r\n    \"updateDescription\": \"Mensaje de cancelacion\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{SandboxUrl}}/payment/cancel",
+							"host": [
+								"{{SandboxUrl}}"
+							],
+							"path": [
+								"payment",
+								"cancel"
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Server",
+							"value": "nginx"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 22 Oct 2024 20:04:19 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, max-age=0, must-revalidate"
+						},
+						{
+							"key": "Pragma",
+							"value": "no-cache"
+						},
+						{
+							"key": "Expires",
+							"value": "0"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "SAMEORIGIN"
+						},
+						{
+							"key": "Strict-Transport-Security",
+							"value": "max-age=31536000; includeSubDomains"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"responseCode\": 400,\n    \"responseMessage\": \"Invalid request\",\n    \"data\": {\n        \"errors\": {\n            \"reference\": \"Reference is not valid\"\n        }\n    }\n}"
+				},
+				{
+					"name": "Payment Not Found",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"reference\": \"51252410220E9EDFAFB5C136F84098\",\r\n    \"status\": \"03\",\r\n    \"updateDescription\": \"Mensaje de cancelacion\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{SandboxUrl}}/payment/cancel",
+							"host": [
+								"{{SandboxUrl}}"
+							],
+							"path": [
+								"payment",
+								"cancel"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Server",
+							"value": "nginx"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 22 Oct 2024 20:32:42 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, max-age=0, must-revalidate"
+						},
+						{
+							"key": "Pragma",
+							"value": "no-cache"
+						},
+						{
+							"key": "Expires",
+							"value": "0"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "SAMEORIGIN"
+						},
+						{
+							"key": "Strict-Transport-Security",
+							"value": "max-age=31536000; includeSubDomains"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"responseCode\": 404,\n    \"responseMessage\": \"Payment not found\",\n    \"data\": {\n        \"status\": 404,\n        \"message\": \"Payment with reference = 51252410220E9EDFAFB5C136F84098 not found\"\n    }\n}"
+				},
+				{
+					"name": "Payment previously cancelled",
+					"originalRequest": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"reference\": \"71e82410224022F8E7495215B83DFD\",\r\n    \"status\": \"03\",\r\n    \"updateDescription\": \"Mensaje de cancelacion\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{SandboxUrl}}/payment/cancel",
+							"host": [
+								"{{SandboxUrl}}"
+							],
+							"path": [
+								"payment",
+								"cancel"
+							]
+						}
+					},
+					"status": "Conflict",
+					"code": 409,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Server",
+							"value": "nginx"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 22 Oct 2024 20:39:47 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, max-age=0, must-revalidate"
+						},
+						{
+							"key": "Pragma",
+							"value": "no-cache"
+						},
+						{
+							"key": "Expires",
+							"value": "0"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "SAMEORIGIN"
+						},
+						{
+							"key": "Strict-Transport-Security",
+							"value": "max-age=31536000; includeSubDomains"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"responseCode\": 409,\n    \"responseMessage\": \"Payment previously cancelled\",\n    \"data\": {\n        \"paymentId\": 3,\n        \"creationDate\": \"2024-10-22 14:30:18\",\n        \"reference\": \"71e82410224022F8E7495215B83DFD\",\n        \"status\": \"03\",\n        \"message\": \"Payment previously cancelled\",\n        \"cancelDescription\": \"Mensaje de cancelacion\",\n        \"updatedAt\": \"2024-10-22 14:38:55\"\n    }\n}"
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"function base64UrlEncode(str) {\r",
+					"    return btoa(str).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\r",
+					"}\r",
+					"\r",
+					"\r",
+					"var body = pm.request.body;\r",
+					"var payload = {}; \r",
+					"\r",
+					"if (body.mode === 'raw') {\r",
+					"    payload = JSON.parse(body.raw);\r",
+					"}\r",
+					"\r",
+					"var header = {\r",
+					"    \"alg\": \"HS512\",\r",
+					"    \"typ\": \"JWT\"\r",
+					"};\r",
+					"\r",
+					"var encodedHeader = base64UrlEncode(JSON.stringify(header));\r",
+					"var encodedPayload = base64UrlEncode(JSON.stringify(payload));\r",
+					"\r",
+					"var signature = CryptoJS.HmacSHA512(encodedHeader + \".\" + encodedPayload, '449e5cf8ef9d85f5a836f8551bd108ee82bc7a6ea169eed2a8c1f018517719f24eaa719a01219ee6a4f7ffcc072a23a6cf069b900dfb75852123a0e9a8bc47ed');\r",
+					"var encodedSignature = signature.toString(CryptoJS.enc.Base64).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\r",
+					"\r",
+					"var jwt = encodedHeader + \".\" + encodedPayload + \".\" + encodedSignature;\r",
+					"\r",
+					"console.log(jwt);\r",
+					"\r",
+					"pm.environment.set(\"jwt\", jwt);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "token",
+			"value": ""
+		},
+		{
+			"key": "SandboxUrl",
+			"value": "http://sandbox-v1.portalventas.net/v1",
+			"type": "string"
+		}
+	]
+}
