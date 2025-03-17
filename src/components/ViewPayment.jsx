@@ -4,6 +4,7 @@ import { Container, Card, Row, Col, Badge, Button, Spinner, Alert } from 'react-
 import { FaArrowLeft, FaFilePdf, FaCopy, FaCheck, FaSync } from 'react-icons/fa';
 import { PaymentContext } from '../context/PaymentContext';
 import { generatePaymentPDF } from '../utils/pdfGenerator';
+import logo from '../assets/logo.png';
 
 const ViewPayment = () => {
   const { reference, paymentId } = useParams();
@@ -111,14 +112,21 @@ const ViewPayment = () => {
       <Card className="shadow-sm">
         <Card.Body>
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <Button 
-              variant="outline-secondary" 
-              onClick={() => navigate('/dashboard')}
-            >
-              <FaArrowLeft className="me-2" />
-              Volver al Dashboard
-            </Button>
-            <h3 className="mb-0">Detalles del Pago</h3>
+            <div className="d-flex align-items-center gap-3">
+              <Button 
+                variant="outline-secondary" 
+                onClick={() => navigate('/dashboard')}
+              >
+                <FaArrowLeft className="me-2" />
+                Volver al Dashboard
+              </Button>
+              <img 
+                src={logo}
+                alt="Logo" 
+                style={{ height: '40px', marginRight: '15px' }}
+              />
+              <h3 className="mb-0">Detalles del Pago</h3>
+            </div>
             {payment && (
               <Button 
                 variant="outline-primary"

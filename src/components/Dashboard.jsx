@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Card, Button, Row, Col, Modal, Form, Alert } from 'react-bootstrap';
 import { FaPlus, FaSignOutAlt, FaSearch, FaTable } from 'react-icons/fa';
+import DashboardCharts from './DashboardCharts';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -56,54 +57,76 @@ const Dashboard = () => {
   };
 
   return (
-    <Container className="d-flex justify-content-center align-items-center vh-100">
-      <Card className="p-5 shadow-lg" style={{ width: '100%', maxWidth: '800px' }}>
-        <Card.Body className="text-center">
-          <h1 className="fw-bold mb-4">Dashboard</h1>
-          <p className="text-muted mb-5">Bienvenido al sistema de gestión de pagos</p>
-          
-          <Row className="justify-content-center mb-4">
-            <Col xs={12} md={4} className="mb-3">
-              <Button 
-                variant="primary" 
-                size="lg" 
-                className="w-100"
-                onClick={() => navigate('/create-payment')}
-              >
-                <FaPlus className="me-2" />
-                Crear Referencia
-              </Button>
-            </Col>
-            <Col xs={12} md={4} className="mb-3">
-              <Button 
-                variant="info" 
-                size="lg" 
-                className="w-100 text-white"
-                onClick={() => setShowModal(true)}
-              >
-                <FaSearch className="me-2" />
-                Buscar Referencia
-              </Button>
-            </Col>
-            <Col xs={12} md={4} className="mb-3">
-              <Button 
-                variant="success" 
-                size="lg" 
-                className="w-100"
-                onClick={() => navigate('/payment-list')}
-              >
-                <FaTable className="me-2" />
-                Ver Referencias
-              </Button>
-            </Col>
-          </Row>
+    <Container fluid className="py-4">
+      <Row className="mb-4">
+        <Col>
+          <Card className="shadow-sm">
+            <Card.Body>
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h1 className="mb-0">Dashboard</h1>
+                <Button variant="outline-danger" onClick={handleLogout}>
+                  <FaSignOutAlt className="me-2" />
+                  Cerrar Sesión
+                </Button>
+              </div>
 
-          <Button variant="outline-danger" onClick={handleLogout}>
-            <FaSignOutAlt className="me-2" />
-            Cerrar Sesión
-          </Button>
-        </Card.Body>
-      </Card>
+              <Row className="g-4 mb-4">
+                <Col md={4}>
+                  <Card className="h-100 border-primary">
+                    <Card.Body className="d-flex flex-column align-items-center justify-content-center text-center">
+                      <FaPlus className="display-4 mb-3 text-primary" />
+                      <h4>Crear Referencia</h4>
+                      <p className="text-muted">Genera una nueva referencia de pago</p>
+                      <Button 
+                        variant="primary" 
+                        className="mt-auto w-100"
+                        onClick={() => navigate('/create-payment')}
+                      >
+                        Crear Nueva
+                      </Button>
+                    </Card.Body>
+                  </Card>
+                </Col>
+                <Col md={4}>
+                  <Card className="h-100 border-info">
+                    <Card.Body className="d-flex flex-column align-items-center justify-content-center text-center">
+                      <FaSearch className="display-4 mb-3 text-info" />
+                      <h4>Buscar Referencia</h4>
+                      <p className="text-muted">Consulta una referencia específica</p>
+                      <Button 
+                        variant="info" 
+                        className="mt-auto w-100 text-white"
+                        onClick={() => setShowModal(true)}
+                      >
+                        Buscar
+                      </Button>
+                    </Card.Body>
+                  </Card>
+                </Col>
+                <Col md={4}>
+                  <Card className="h-100 border-success">
+                    <Card.Body className="d-flex flex-column align-items-center justify-content-center text-center">
+                      <FaTable className="display-4 mb-3 text-success" />
+                      <h4>Ver Referencias</h4>
+                      <p className="text-muted">Lista todas las referencias de pago</p>
+                      <Button 
+                        variant="success" 
+                        className="mt-auto w-100"
+                        onClick={() => navigate('/payment-list')}
+                      >
+                        Ver Lista
+                      </Button>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              </Row>
+
+              {/* Componente de Gráficas */}
+              <DashboardCharts />
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
       <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>

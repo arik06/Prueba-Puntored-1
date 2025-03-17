@@ -185,7 +185,7 @@ export const PaymentProvider = ({ children }) => {
     setPaymentCache({});
   }, []);
 
-  const cancelPayment = async (reference, cancelReason) => {
+  const cancelPayment = async (reference) => {
     setLoading(true);
     setError(null);
 
@@ -209,7 +209,7 @@ export const PaymentProvider = ({ children }) => {
         body: JSON.stringify({
           reference: reference,
           status: '03',
-          updateDescription: cancelReason
+          updateDescription: 'Cancelación solicitada por el usuario'
         })
       });
 
@@ -226,7 +226,7 @@ export const PaymentProvider = ({ children }) => {
             ? { 
                 ...p, 
                 status: '03',
-                cancelDescription: cancelReason,
+                cancelDescription: 'Cancelación solicitada por el usuario',
                 updatedAt: new Date().toISOString()
               } 
             : p
@@ -243,7 +243,7 @@ export const PaymentProvider = ({ children }) => {
           data: {
             ...payment,
             status: '03',
-            cancelDescription: cancelReason,
+            cancelDescription: 'Cancelación solicitada por el usuario',
             updatedAt: new Date().toISOString()
           },
           timestamp: Date.now()
