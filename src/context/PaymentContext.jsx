@@ -1,7 +1,12 @@
-import React, { createContext, useState, useCallback } from 'react';
+import React, { createContext, useState, useCallback, useContext } from 'react';
+import { toast } from 'react-toastify';
 
 // Crear el contexto
 export const PaymentContext = createContext();
+
+export const usePayments = () => {
+  return useContext(PaymentContext);
+};
 
 // Proveedor del contexto
 export const PaymentProvider = ({ children }) => {
@@ -9,22 +14,93 @@ export const PaymentProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [paymentCache, setPaymentCache] = useState({});
   const [paymentsList, setPaymentsList] = useState(() => {
-    const savedPayments = localStorage.getItem('paymentsList');
+    const savedPayments = localStorage.getItem('payments');
     return savedPayments ? JSON.parse(savedPayments) : [];
   });
 
   // Guardar la lista de pagos en localStorage cuando cambie
   const savePaymentsToStorage = (payments) => {
-    localStorage.setItem('paymentsList', JSON.stringify(payments));
+    localStorage.setItem('payments', JSON.stringify(payments));
   };
 
-  const addPaymentToList = useCallback((payment) => {
-    setPaymentsList(prevList => {
-      const newList = [payment, ...prevList];
-      savePaymentsToStorage(newList);
-      return newList;
+  const addPayment = (payment) => {
+    const newPayment = {
+      ...payment,
+      status: 'PENDIENTE',
+      createdAt: new Date().toISOString()
+    };
+
+    setPaymentsList(prev => {
+      const updated = [newPayment, ...prev];
+      savePaymentsToStorage(updated);
+      return updated;
     });
-  }, []);
+
+    // Notificar creación de nueva referencia
+    toast.success('Referencia creada exitosamente', {
+      position: "top-right",
+      autoClose: 5000,
+    });
+
+    // Emitir evento para el sistema de notificaciones
+    const event = new CustomEvent('paymentStatusUpdate', {
+      detail: {
+        referenceId: payment.reference,
+        status: 'PENDIENTE',
+        message: `Nueva referencia creada: ${payment.reference}`
+      }
+    });
+    window.dispatchEvent(event);
+  };
+
+  const updatePaymentStatus = (reference, newStatus) => {
+    setPaymentsList(prev => {
+      const updated = prev.map(payment => {
+        if (payment.reference === reference) {
+          const updatedPayment = {
+            ...payment,
+            status: newStatus,
+            updatedAt: new Date().toISOString()
+          };
+
+          // Emitir evento para el sistema de notificaciones
+          const event = new CustomEvent('paymentStatusUpdate', {
+            detail: {
+              referenceId: reference,
+              status: newStatus,
+              message: `La referencia ${reference} ha cambiado a estado: ${newStatus}`
+            }
+          });
+          window.dispatchEvent(event);
+
+          // Mostrar toast según el estado
+          switch (newStatus) {
+            case 'PAGADO':
+              toast.success(`Referencia ${reference} pagada exitosamente`);
+              break;
+            case 'CANCELADO':
+              toast.warning(`Referencia ${reference} cancelada`);
+              break;
+            case 'PENDIENTE':
+              toast.info(`Referencia ${reference} pendiente de pago`);
+              break;
+            default:
+              toast.info(`Estado de referencia ${reference} actualizado`);
+          }
+
+          return updatedPayment;
+        }
+        return payment;
+      });
+
+      savePaymentsToStorage(updated);
+      return updated;
+    });
+  };
+
+  const getPaymentByReference = (reference) => {
+    return paymentsList.find(payment => payment.reference === reference);
+  };
 
   const authenticate = async (credentials) => {
     setLoading(true);
@@ -102,11 +178,7 @@ export const PaymentProvider = ({ children }) => {
         }));
 
         // Agregar a la lista de pagos
-        addPaymentToList({
-          ...data.data,
-          creationDate: new Date().toISOString(),
-          status: '01' // Estado inicial: Pendiente
-        });
+        addPayment(data.data);
       }
 
       return data;
@@ -163,13 +235,7 @@ export const PaymentProvider = ({ children }) => {
         }));
 
         // Actualizar el estado en la lista de pagos si existe
-        setPaymentsList(prevList => {
-          const updatedList = prevList.map(payment => 
-            payment.reference === reference ? { ...payment, ...data.data } : payment
-          );
-          savePaymentsToStorage(updatedList);
-          return updatedList;
-        });
+        updatePaymentStatus(reference, data.data.status);
       }
 
       return data;
@@ -185,7 +251,7 @@ export const PaymentProvider = ({ children }) => {
     setPaymentCache({});
   }, []);
 
-  const cancelPayment = async (reference, cancelReason) => {
+  const cancelPayment = async (reference) => {
     setLoading(true);
     setError(null);
 
@@ -209,7 +275,7 @@ export const PaymentProvider = ({ children }) => {
         body: JSON.stringify({
           reference: reference,
           status: '03',
-          updateDescription: cancelReason
+          updateDescription: 'Cancelación solicitada por el usuario'
         })
       });
 
@@ -220,20 +286,7 @@ export const PaymentProvider = ({ children }) => {
       }
 
       // Actualizar el estado en la lista de pagos
-      setPaymentsList(prevList => {
-        const updatedList = prevList.map(p => 
-          p.reference === reference 
-            ? { 
-                ...p, 
-                status: '03',
-                cancelDescription: cancelReason,
-                updatedAt: new Date().toISOString()
-              } 
-            : p
-        );
-        savePaymentsToStorage(updatedList);
-        return updatedList;
-      });
+      updatePaymentStatus(reference, '03');
 
       // Actualizar el caché
       const cacheKey = `${reference}:${payment.paymentId}`;
@@ -243,7 +296,7 @@ export const PaymentProvider = ({ children }) => {
           data: {
             ...payment,
             status: '03',
-            cancelDescription: cancelReason,
+            cancelDescription: 'Cancelación solicitada por el usuario',
             updatedAt: new Date().toISOString()
           },
           timestamp: Date.now()
@@ -270,7 +323,10 @@ export const PaymentProvider = ({ children }) => {
     getPaymentDetails,
     clearPaymentCache,
     paymentsList,
-    cancelPayment
+    cancelPayment,
+    addPayment,
+    updatePaymentStatus,
+    getPaymentByReference
   };
 
   return (
@@ -279,3 +335,5 @@ export const PaymentProvider = ({ children }) => {
     </PaymentContext.Provider>
   );
 };
+
+export default PaymentProvider;

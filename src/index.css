@@ -48,6 +48,12 @@ body, html {
   background: white;
   border-radius: 12px;
   box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Estilos para los formularios */
@@ -66,6 +72,18 @@ body, html {
 .alert {
   border-radius: 8px;
   padding: 15px;
+  animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translate3d(0, -100%, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
 }
 
 /* Estilos para los botones secundarios */
@@ -94,5 +112,132 @@ body, html {
 
   .card {
     margin: 10px;
+  }
+}
+
+/* Animaciones y transiciones globales */
+.fade-enter {
+  opacity: 0;
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 300ms ease-in;
+}
+
+.fade-exit {
+  opacity: 1;
+}
+
+.fade-exit-active {
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}
+
+/* Animación para los botones */
+.btn {
+  transition: all 0.2s ease-in-out !important;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Animación para los badges de estado */
+.badge {
+  transition: all 0.2s ease-in-out;
+}
+
+.badge:hover {
+  transform: scale(1.1);
+}
+
+/* Animación para los iconos */
+.fa, .fas, .far, .fal, .fab {
+  transition: transform 0.2s ease-in-out;
+}
+
+button:hover .fa,
+button:hover .fas,
+button:hover .far,
+button:hover .fal,
+button:hover .fab {
+  transform: scale(1.1);
+}
+
+/* Animación para las gráficas */
+.chart-container {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animación para la tabla */
+.table-responsive {
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Animación para los modales */
+.modal.show .modal-dialog {
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translate3d(0, 100%, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+/* Animación para los filtros */
+.filters-container {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+
+.filters-container.show {
+  max-height: 500px;
+}
+
+/* Efecto de pulso para acciones importantes */
+.pulse {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
   }
 }

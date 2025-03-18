@@ -1,0 +1,95 @@
+/* Estilos para el Dashboard */
+
+/* Contenedor principal */
+.container-fluid {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Efecto hover para las tarjetas */
+.hover-shadow {
+  transition: all 0.3s ease;
+}
+
+.hover-shadow:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Responsive para iconos */
+.display-4 {
+  font-size: 2.5rem;
+}
+
+@media (max-width: 768px) {
+  .display-4 {
+    font-size: 2rem;
+  }
+}
+
+/* Ajustes para dispositivos móviles */
+@media (max-width: 576px) {
+  .card-body {
+    padding: 1rem;
+  }
+
+  h4 {
+    font-size: 1.25rem;
+  }
+
+  .display-4 {
+    font-size: 1.75rem;
+  }
+}
+
+/* Ajustes para tablets */
+@media (min-width: 577px) and (max-width: 751px) {
+  .container-fluid {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Estilos para el navbar */
+.navbar {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para los círculos de iconos */
+.rounded-circle {
+  transition: all 0.3s ease;
+}
+
+.card:hover .rounded-circle {
+  transform: scale(1.1);
+}
+
+/* Ajustes para el grid en el ancho fijo */
+@media (min-width: 752px) {
+  .row {
+    margin-right: -0.75rem;
+    margin-left: -0.75rem;
+  }
+  
+  .col-lg-4 {
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
+  }
+} 
