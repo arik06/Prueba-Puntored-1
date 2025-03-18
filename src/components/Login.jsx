@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
+import apiService from '../services/apiService';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -23,48 +24,20 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/authenticate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ username, password }),
-        credentials: 'include'
+      const response = await apiService.post('/authenticate', { 
+        username, 
+        password 
       });
 
-      const data = await response.json();
-      console.log('Respuesta del servidor:', data);
-
-      if (!response.ok || data.responseCode === 401) {
-        throw new Error(data.responseMessage || 'Error al iniciar sesión');
-      }
-
-      if (data.responseCode !== 200) {
-        throw new Error('Error en la autenticación');
-      }
-
-      // El token está dentro de data.data.token
-      const token = data.data?.token;
-      
-      if (!token) {
-        console.error('Estructura de la respuesta:', data);
+      if (response?.data?.token) {
+        authService.setToken(response.data.token);
+        navigate('/dashboard');
+      } else {
         throw new Error('No se recibió el token de acceso');
       }
-
-      // Guardar el token
-      authService.setToken(token);
-
-      // Verificar que el token sea válido
-      if (!authService.isAuthenticated()) {
-        console.error('Token recibido:', token);
-        throw new Error('Token inválido');
-      }
-
-      navigate('/dashboard');
     } catch (err) {
-      console.error('Error completo:', err);
-      setError(err.message || 'Error al iniciar sesión');
+      console.error('Error en login:', err);
+      setError(err.response?.data?.responseMessage || 'Error al iniciar sesión');
     } finally {
       setIsLoading(false);
     }
@@ -76,7 +49,7 @@ const Login = () => {
         <Card.Body>
           <h3 className="text-center mb-4">Iniciar Sesión</h3>
           {error && (
-            <Alert variant="danger" className="mb-4">
+            <Alert variant="danger" className="mb-6">
               {error}
             </Alert>
           )}

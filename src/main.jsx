@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
 import App from './App';
@@ -9,9 +9,9 @@ import { PaymentProvider } from './context/PaymentContext';
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <PaymentProvider>
-      <Router>
+      <BrowserRouter>
         <App />
-      </Router>
+      </BrowserRouter>
     </PaymentProvider>
   </React.StrictMode>
 );

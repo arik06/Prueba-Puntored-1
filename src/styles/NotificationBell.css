@@ -1,0 +1,162 @@
+.notification-bell {
+  position: relative;
+}
+
+.notification-toggle {
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--text-dark);
+}
+
+.notification-toggle:after {
+  display: none;
+}
+
+.bell-container {
+  position: relative;
+  padding: 8px;
+}
+
+.bell-icon {
+  font-size: 1.25rem;
+  transition: color 0.3s ease;
+}
+
+.bell-icon.connected {
+  color: var(--success);
+}
+
+.bell-icon.disconnected {
+  color: var(--danger);
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(25%, -25%);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.notification-menu {
+  width: 320px;
+  padding: 0;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.notification-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.connection-status {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+}
+
+.connection-status.connected {
+  background-color: var(--success-light);
+  color: var(--success);
+}
+
+.connection-status.disconnected {
+  background-color: var(--danger-light);
+  color: var(--danger);
+}
+
+.clear-button {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 0.875rem;
+  padding: 0;
+  cursor: pointer;
+}
+
+.clear-button:hover {
+  text-decoration: underline;
+}
+
+.notification-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.notification-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.notification-item.unread {
+  background-color: var(--bg-light);
+}
+
+.notification-item.unread:hover {
+  background-color: var(--bg-hover);
+}
+
+.notification-content {
+  margin: 0;
+}
+
+.notification-message {
+  margin: 0 0 0.25rem;
+  font-size: 0.875rem;
+  color: var(--text-dark);
+}
+
+.notification-time {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.no-notifications {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* Responsive Styles */
+@media (max-width: 576px) {
+  .notification-menu {
+    width: 100vw;
+    position: fixed !important;
+    top: 56px !important; /* Altura del navbar */
+    left: 0 !important;
+    transform: none !important;
+    border-radius: 0;
+    max-height: calc(100vh - 56px);
+  }
+
+  .notification-list {
+    max-height: calc(100vh - 120px);
+  }
+
+  .notification-actions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+} 

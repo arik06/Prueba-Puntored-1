@@ -5,11 +5,13 @@ import { FaArrowLeft, FaFilePdf, FaCopy, FaCheck, FaSync } from 'react-icons/fa'
 import { PaymentContext } from '../context/PaymentContext';
 import { generatePaymentPDF } from '../utils/pdfGenerator';
 import logo from '../assets/logo.png';
+import { usePayments } from '../context/PaymentContext';
 
 const ViewPayment = () => {
   const { reference, paymentId } = useParams();
   const navigate = useNavigate();
   const { getPaymentDetails } = useContext(PaymentContext);
+  const { getPaymentByReference, updatePaymentStatus } = usePayments();
   const [payment, setPayment] = useState(null);
   const [copied, setCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,23 +46,38 @@ const ViewPayment = () => {
   };
 
   useEffect(() => {
-    fetchPaymentDetails();
-  }, [reference, paymentId]);
+    const paymentData = getPaymentByReference(reference);
+    if (!paymentData) {
+      navigate('/dashboard');
+      return;
+    }
+    setPayment(paymentData);
+  }, [reference, navigate, getPaymentByReference]);
 
   const handleRefresh = () => {
     fetchPaymentDetails(true);
   };
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      '01': { variant: 'warning', text: 'Pendiente' },
-      '02': { variant: 'success', text: 'Pagado' },
-      '03': { variant: 'danger', text: 'Cancelado' },
-      '04': { variant: 'secondary', text: 'Expirado' }
-    };
+  const handleStatusChange = (newStatus) => {
+    updatePaymentStatus(reference, newStatus);
+    setPayment(prev => ({
+      ...prev,
+      status: newStatus,
+      updatedAt: new Date().toISOString()
+    }));
+  };
 
-    const config = statusConfig[status] || { variant: 'info', text: 'Desconocido' };
-    return <Badge bg={config.variant}>{config.text}</Badge>;
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'PAGADO':
+        return <Badge bg="success">Pagado</Badge>;
+      case 'CANCELADO':
+        return <Badge bg="danger">Cancelado</Badge>;
+      case 'PENDIENTE':
+        return <Badge bg="warning">Pendiente</Badge>;
+      default:
+        return <Badge bg="secondary">{status}</Badge>;
+    }
   };
 
   const handleCopyReference = () => {
@@ -208,6 +225,36 @@ const ViewPayment = () => {
                   <FaFilePdf className="me-2" />
                   Descargar Comprobante PDF
                 </Button>
+              </div>
+
+              <div className="mt-4">
+                <h5>Acciones</h5>
+                <div className="d-flex gap-2">
+                  {payment.status !== 'PAGADO' && (
+                    <Button 
+                      variant="success"
+                      onClick={() => handleStatusChange('PAGADO')}
+                    >
+                      Marcar como Pagado
+                    </Button>
+                  )}
+                  {payment.status !== 'CANCELADO' && (
+                    <Button 
+                      variant="danger"
+                      onClick={() => handleStatusChange('CANCELADO')}
+                    >
+                      Cancelar Referencia
+                    </Button>
+                  )}
+                  {payment.status !== 'PENDIENTE' && (
+                    <Button 
+                      variant="warning"
+                      onClick={() => handleStatusChange('PENDIENTE')}
+                    >
+                      Marcar como Pendiente
+                    </Button>
+                  )}
+                </div>
               </div>
             </>
           )}
