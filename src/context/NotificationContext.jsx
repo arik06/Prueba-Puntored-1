@@ -12,11 +12,9 @@ export const NotificationProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(true);
 
   useEffect(() => {
-    // Función para manejar las actualizaciones de estado
     const handlePaymentStatusUpdate = (event) => {
       const { referenceId, status, message } = event.detail;
       
-      // Mostrar notificación toast con estilo según el estado
       switch (status) {
         case 'PAGADO':
           toast.success(message, {
@@ -49,7 +47,6 @@ export const NotificationProvider = ({ children }) => {
           });
       }
 
-      // Actualizar lista de notificaciones
       setNotifications(prev => [{
         id: Date.now(),
         referenceId,
@@ -60,10 +57,8 @@ export const NotificationProvider = ({ children }) => {
       }, ...prev]);
     };
 
-    // Suscribirse al evento de actualización de estado
     window.addEventListener('paymentStatusUpdate', handlePaymentStatusUpdate);
 
-    // Limpiar al desmontar
     return () => {
       window.removeEventListener('paymentStatusUpdate', handlePaymentStatusUpdate);
     };

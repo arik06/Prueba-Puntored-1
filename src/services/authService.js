@@ -8,7 +8,6 @@ class AuthService {
   setToken(token) {
     if (!token) return;
     try {
-      // Verificar que el token sea un JWT válido antes de guardarlo
       const decoded = jwtDecode(token);
       if (decoded) {
         localStorage.setItem('token', token);
@@ -36,13 +35,11 @@ class AuthService {
     }
   }
 
-  // Verificar si el usuario está autenticado
   isAuthenticated() {
     const token = this.getToken();
     return token && !this.isTokenExpired(token);
   }
 
-  // Obtener información del token decodificado
   getDecodedToken() {
     try {
       const token = this.getToken();
@@ -53,7 +50,6 @@ class AuthService {
     }
   }
 
-  // Refrescar el token
   async refreshToken() {
     try {
       const response = await fetch('/api/auth/refresh', {

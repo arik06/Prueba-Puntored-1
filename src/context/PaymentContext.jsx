@@ -335,3 +335,5 @@ export const PaymentProvider = ({ children }) => {
     </PaymentContext.Provider>
   );
 };
+
+export default PaymentProvider;
