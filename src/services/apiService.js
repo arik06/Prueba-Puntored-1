@@ -38,7 +38,12 @@ api.interceptors.request.use(
 
 // Interceptor de respuestas con reintentos
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.data?.data) {
+      return response.data.data;
+    }
+    return response.data;
+  },
   async (error) => {
     const { config } = error;
 
@@ -65,8 +70,17 @@ api.interceptors.response.use(
 
 // Funciones de API con manejo de errores
 const handleApiError = (error) => {
-  const message = error.response?.data?.responseMessage || 
-                 'Ha ocurrido un error en el servidor. Por favor, inténtelo más tarde.';
+  let message = 'Ha ocurrido un error en el servidor. Por favor, inténtelo más tarde.';
+  
+  if (error.response?.data?.message) {
+    message = error.response.data.message;
+  } else if (error.response?.data?.responseMessage) {
+    message = error.response.data.responseMessage;
+  }
+
+  if (error.response?.status === 401) {
+    message = 'Usuario o contraseña incorrectos';
+  }
   
   if (error.response?.status >= 500) {
     toast.error(`Error del servidor: ${message}`, {
@@ -75,14 +89,17 @@ const handleApiError = (error) => {
     });
   }
   
-  throw error;
+  const enhancedError = new Error(message);
+  enhancedError.response = error.response;
+  enhancedError.status = error.response?.status;
+  throw enhancedError;
 };
 
 export const apiService = {
   async get(url, config = {}) {
     try {
       const response = await api.get(url, config);
-      return response.data;
+      return response;
     } catch (error) {
       return handleApiError(error);
     }
@@ -91,7 +108,7 @@ export const apiService = {
   async post(url, data, config = {}) {
     try {
       const response = await api.post(url, data, config);
-      return response.data;
+      return response;
     } catch (error) {
       return handleApiError(error);
     }
@@ -100,7 +117,7 @@ export const apiService = {
   async put(url, data, config = {}) {
     try {
       const response = await api.put(url, data, config);
-      return response.data;
+      return response;
     } catch (error) {
       return handleApiError(error);
     }
@@ -109,7 +126,7 @@ export const apiService = {
   async delete(url, config = {}) {
     try {
       const response = await api.delete(url, config);
-      return response.data;
+      return response;
     } catch (error) {
       return handleApiError(error);
     }

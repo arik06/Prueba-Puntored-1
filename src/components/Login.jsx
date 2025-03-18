@@ -14,13 +14,19 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (authService.isAuthenticated()) {
+    const token = authService.getToken();
+    if (token && !authService.isTokenExpired(token)) {
       navigate('/dashboard');
     }
   }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!username || !password) {
+      setError('Por favor ingrese usuario y contraseña');
+      return;
+    }
+
     setError('');
     setIsLoading(true);
 
@@ -35,37 +41,39 @@ const Login = () => {
         toast.success('¡Inicio de sesión exitoso!', {
           position: "top-right",
           autoClose: 2000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
         });
         navigate('/dashboard');
-      } else {
-        throw new Error('No se recibió el token de acceso');
-      }
-    } catch (err) {
-      console.error('Error en login:', err);
-      const errorMessage = err.response?.data?.responseMessage || 'Error al iniciar sesión';
-      
-      if (err.response?.status === 401) {
-        toast.error('Usuario o contraseña incorrectos', {
-          position: "top-right",
-          autoClose: 4000,
-        });
-      } else if (err.response?.status >= 500) {
-        toast.error('Error del servidor. Reintentando...', {
+      } else if (response?.token) {
+        authService.setToken(response.token);
+        toast.success('¡Inicio de sesión exitoso!', {
           position: "top-right",
           autoClose: 2000,
         });
+        navigate('/dashboard');
       } else {
-        toast.error(errorMessage, {
-          position: "top-right",
-          autoClose: 4000,
-        });
+        console.error('Estructura de respuesta:', response);
+        throw new Error('No se recibió el token de acceso');
       }
+    } catch (err) {
+      let errorMessage = 'Error al iniciar sesión';
+      
+      if (err.response?.status === 401) {
+        errorMessage = 'Usuario o contraseña incorrectos';
+      } else if (err.response?.status >= 500) {
+        errorMessage = 'Error del servidor. Por favor, intente más tarde';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 4000,
+      });
       
       setError(errorMessage);
+      console.error('Error de autenticación:', err);
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +112,7 @@ const Login = () => {
               <Form.Control
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => setUsername(e.target.value.trim())}
                 required
                 disabled={isLoading}
                 className="py-2"
@@ -129,7 +137,7 @@ const Login = () => {
               variant="primary"
               type="submit"
               className="w-100 py-2"
-              disabled={isLoading}
+              disabled={isLoading || !username || !password}
               style={{ 
                 fontSize: '1.1rem',
                 transition: 'all 0.3s ease'

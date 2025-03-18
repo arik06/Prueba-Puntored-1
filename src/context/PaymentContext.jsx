@@ -1,4 +1,4 @@
-import React, { createContext, useState, useCallback, useContext } from 'react';
+import React, { createContext, useState, useCallback, useContext, useEffect } from 'react';
 import { toast } from 'react-toastify';
 
 // Crear el contexto
@@ -18,31 +18,26 @@ export const PaymentProvider = ({ children }) => {
     return savedPayments ? JSON.parse(savedPayments) : [];
   });
 
-  // Guardar la lista de pagos en localStorage cuando cambie
-  const savePaymentsToStorage = (payments) => {
-    localStorage.setItem('payments', JSON.stringify(payments));
-  };
+  useEffect(() => {
+    if (paymentsList.length > 0) {
+      localStorage.setItem('payments', JSON.stringify(paymentsList));
+    }
+  }, [paymentsList]);
 
-  const addPayment = (payment) => {
+  const addPayment = useCallback((payment) => {
     const newPayment = {
       ...payment,
       status: 'PENDIENTE',
       createdAt: new Date().toISOString()
     };
 
-    setPaymentsList(prev => {
-      const updated = [newPayment, ...prev];
-      savePaymentsToStorage(updated);
-      return updated;
-    });
+    setPaymentsList(prev => [newPayment, ...prev]);
 
-    // Notificar creación de nueva referencia
     toast.success('Referencia creada exitosamente', {
       position: "top-right",
       autoClose: 5000,
     });
 
-    // Emitir evento para el sistema de notificaciones
     const event = new CustomEvent('paymentStatusUpdate', {
       detail: {
         referenceId: payment.reference,
@@ -51,9 +46,9 @@ export const PaymentProvider = ({ children }) => {
       }
     });
     window.dispatchEvent(event);
-  };
+  }, []);
 
-  const updatePaymentStatus = (reference, newStatus) => {
+  const updatePaymentStatus = useCallback((reference, newStatus) => {
     setPaymentsList(prev => {
       const updated = prev.map(payment => {
         if (payment.reference === reference) {
@@ -63,7 +58,6 @@ export const PaymentProvider = ({ children }) => {
             updatedAt: new Date().toISOString()
           };
 
-          // Emitir evento para el sistema de notificaciones
           const event = new CustomEvent('paymentStatusUpdate', {
             detail: {
               referenceId: reference,
@@ -73,7 +67,6 @@ export const PaymentProvider = ({ children }) => {
           });
           window.dispatchEvent(event);
 
-          // Mostrar toast según el estado
           switch (newStatus) {
             case 'PAGADO':
               toast.success(`Referencia ${reference} pagada exitosamente`);
@@ -93,14 +86,13 @@ export const PaymentProvider = ({ children }) => {
         return payment;
       });
 
-      savePaymentsToStorage(updated);
       return updated;
     });
-  };
+  }, []);
 
-  const getPaymentByReference = (reference) => {
+  const getPaymentByReference = useCallback((reference) => {
     return paymentsList.find(payment => payment.reference === reference);
-  };
+  }, [paymentsList]);
 
   const authenticate = async (credentials) => {
     setLoading(true);
@@ -313,7 +305,7 @@ export const PaymentProvider = ({ children }) => {
     }
   };
 
-  const contextValue = {
+  const value = {
     loading,
     error,
     setLoading,
@@ -326,11 +318,13 @@ export const PaymentProvider = ({ children }) => {
     cancelPayment,
     addPayment,
     updatePaymentStatus,
-    getPaymentByReference
+    getPaymentByReference,
+    paymentCache,
+    setPaymentCache
   };
 
   return (
-    <PaymentContext.Provider value={contextValue}>
+    <PaymentContext.Provider value={value}>
       {children}
     </PaymentContext.Provider>
   );
