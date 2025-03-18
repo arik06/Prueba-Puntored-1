@@ -159,17 +159,4 @@ export const PaymentProvider = ({ children }) => {
 \`\`\`
 
 <<<<<<< HEAD
-## 🤝 Contribuir
 
-1. Fork el proyecto
-2. Crear una rama para tu feature
-3. Commit tus cambios
-4. Push a la rama
-5. Crear un Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT.
-=======
-
->>>>>>> 4f22e546ca179393c02262d57e6a3ef215aabf57
