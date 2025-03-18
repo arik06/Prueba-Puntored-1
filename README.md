@@ -13,6 +13,27 @@ Sistema moderno para la gestión de pagos referenciados, construido con React y 
 
 ## 🛠️ Tecnologías Utilizadas
 
+<<<<<<< HEAD
+=======
+If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# Prueba-Puntored-1
+
+# 🚀 Sistema de Pagos Referenciados
+
+Sistema moderno para la gestión de pagos referenciados, construido con React y tecnologías modernas.
+
+## ✨ Características Principales
+
+- 🔐 Autenticación segura con JWT
+- 📱 Diseño responsive (móvil, tablet, escritorio)
+- 📊 Gráficas interactivas con Chart.js
+- 🔄 Sistema de reintentos automáticos
+- 📨 Notificaciones en tiempo real
+- 🎨 Interfaz moderna e intuitiva
+
+## 🛠️ Tecnologías Utilizadas
+
+>>>>>>> 4f22e546ca179393c02262d57e6a3ef215aabf57
 - React 19.0.0
 - React Router DOM 7.3.0
 - React Bootstrap 2.10.9
@@ -137,6 +158,7 @@ export const PaymentProvider = ({ children }) => {
 };
 \`\`\`
 
+<<<<<<< HEAD
 ## 🤝 Contribuir
 
 1. Fork el proyecto
@@ -148,3 +170,6 @@ export const PaymentProvider = ({ children }) => {
 ## 📄 Licencia
 
 Este proyecto está bajo la Licencia MIT.
+=======
+
+>>>>>>> 4f22e546ca179393c02262d57e6a3ef215aabf57
