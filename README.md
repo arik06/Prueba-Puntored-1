@@ -151,12 +151,4 @@ export const PaymentProvider = ({ children }) => {
 };
 \`\`\`
 
-## 🤝 Contribuir
-
-1. Fork el proyecto
-2. Crear una rama para tu feature
-3. Commit tus cambios
-4. Push a la rama
-5. Crear un Pull Request
-
 
