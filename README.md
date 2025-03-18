@@ -159,6 +159,4 @@ export const PaymentProvider = ({ children }) => {
 4. Push a la rama
 5. Crear un Pull Request
 
-## 📄 Licencia
 
-Este proyecto está bajo la Licencia MIT.
